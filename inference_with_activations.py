@@ -213,7 +213,6 @@ def main():
     print("="*80)
     print(f"Extracting Activations during Inference")
     print("-"*80)
-    print("\n")
     print(f"INFO: Loading Dataset...")
     print(f"INFO: Input CSV: {input_csv_path}")
     df = pd.read_csv(input_csv_path)
@@ -255,7 +254,7 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
 
     # loading the model
-    model = AutoModelForCausalLM(
+    model = AutoModelForCausalLM.from_pretrained(
         str(model_path),
         local_files_only=True,
         torch_dtype=torch_dtype,
