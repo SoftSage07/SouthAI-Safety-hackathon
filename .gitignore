@@ -1,0 +1,23 @@
+# generated outputs
+activations/
+checkpoints/
+results/
+runs/
+wandb/
+models/
+
+# model / tensor files
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.npy
+*.npz
+*.pkl
+
+# python cache
+__pycache__/
+*.pyc
+
+# logs
+*.log
