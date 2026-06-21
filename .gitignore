@@ -5,6 +5,7 @@ results/
 runs/
 wandb/
 models/
+layer_*/
 
 # model / tensor files
 *.pt

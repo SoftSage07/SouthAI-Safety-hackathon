@@ -1,19 +1,3 @@
-"""
-data_processing.py
----------
-This code contains certain useful helper functions that can be reused. 
-
-USAGE:
-python .\data_processing.py \
-    --activation_dir C:\Users\SATI0004\Documents\SouthAI-Safety-hackathon\output\modified_advbench\mistral_12b_instruct\activations \
-    --labels_csv C:\Users\SATI0004\Documents\SouthAI-Safety-hackathon\datasets\final_modified_advbench.csv \
-    --output_filename combined_advbench_activations \
-    --output_dir C:\Users\SATI0004\Documents\SouthAI-Safety-hackathon\output\modified_advbench\mistral_12b_instruct
-
-NOTE: For output_filename, if you're running on the XSTest, please pass in the argument: 'combined_xstest_activations'.
-
-"""
-
 # Imports
 import os
 import torch
@@ -30,7 +14,7 @@ def loading_indiv_activation(path, id):
 
     # in case the activation vector is stored as a dict
     if isinstance(x, dict):
-        print(f"INFO: Keys in activation file:", x.keys())
+        print("INFO: Keys in activation file:", x.keys())
         x = x["activations"]
 
     x = x.detach().cpu().float().squeeze()
@@ -79,9 +63,9 @@ def build_probe_dataset(labels_csv, activation_dir, output_dir, filename):
         if not os.path.exists(activation_path):
             print(f"ERROR: Missing activation file: {activation_path}")
             continue
-        print(f"INFO: Loading all activations one-by-one...")
+        print("INFO: Loading all activations one-by-one...")
         x = loading_indiv_activation(activation_path, id)
-        print(f"INFO: Successfully Loaded all activations! ")
+        print("INFO: Successfully Loaded all activations! ")
         shape_per_activation = x.shape
 
         ids.append(id)
@@ -89,7 +73,7 @@ def build_probe_dataset(labels_csv, activation_dir, output_dir, filename):
         activations.append(x)
 
     if len(activations) == 0:
-        raise RuntimeError(f"ERROR: No activation files were successfully loaded!")
+        raise RuntimeError("ERROR: No activation files were successfully loaded!")
     elif len(activations) != len(df):
         raise RuntimeError(f"ERROR: Not all activation files were properly merged.\nlen(activations) = {len(activations)}\nlen(df) = {len(df)}")
     
@@ -111,7 +95,7 @@ def build_probe_dataset(labels_csv, activation_dir, output_dir, filename):
 
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
 
-    print(f"INFO: Saving the compiled dataset...")
+    print("INFO: Saving the compiled dataset...")
     # saving the probe_dataset.pt
     output_file = os.path.join(output_dir, f"{filename}.pt")
     torch.save(probe_dataset, output_file)

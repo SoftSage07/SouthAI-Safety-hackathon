@@ -1,18 +1,3 @@
-# =================================
-# # Inference with Activations
-"""
-This script contains the code to run a full inference on language models (both small and large) while extracting the activations from the
-middle-last layers of the last prompt token. The rationale behind choosing this is that usually the reasoning of the model is usually more
-or less complete at the last token, and the middle-last layers are usually the ones that contain more information as it is just before the
-response generation at this stage.
-
-USAGE:
-
-"""
-# =================================
-
-# 1. Imports
-#-------------
 import json
 import torch
 import argparse
@@ -21,13 +6,7 @@ from pathlib import Path
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-
 def get_torch_dtype(dtype_name: str):
-    """
-    What it does: This function is used to convert a string to the actual pytorch data type.
-    Rationale: When you load 7B/8B models, using full float32 can be expensive. Therefore, we would want to revert to bfloat16 or float16.
-    This allows us to change the precision from the command line itself.
-    """
     if dtype_name == "float16":
         return torch.float16
     if dtype_name == "bfloat16":
@@ -37,10 +16,6 @@ def get_torch_dtype(dtype_name: str):
     raise ValueError(f"ERROR: Unsupported dtype: {dtype_name}")
 
 def format_chat_prompt(tokenizer, user_prompt: str):
-    """
-    What it does: Takes a raw prompt from the dataset and formats it into the model's expected chat format.
-    Rationale: Different models may have different ways of handling chat prompts, so we need to ensure the prompt is formatted correctly for each model.
-    """
     messages = [
         {"role": "user", "content": user_prompt}
     ]
@@ -55,53 +30,21 @@ def format_chat_prompt(tokenizer, user_prompt: str):
 
 @torch.no_grad()
 def get_prompt_activations(model, input_ids, attention_mask):
-    """
-    what it does: This is the core activation extraction function.
-    Rationale: to extract activaions 
-    """
-    # running the model on the prompt (ie: Inference code)
-    outputs = model( # model - is the loaded LLM
-        input_ids = input_ids, # the tokenized prompt
-        attention_mask = attention_mask, # tells us which tokens are real and which are not (eg: padding etc) [1,1,0,0,1]. 1- real token; 0 - padding
-        output_hidden_states = True, #asking the model to return the hidden stae represntations as well, as it usually only returns the logits
+    outputs = model(
+        input_ids = input_ids,
+        attention_mask = attention_mask,
+        output_hidden_states = True,
         use_cache = False,
     )
 
-    """
-    NOTE: each hidden state is of the dimensions: [batch_size, sequence_length, hidden_dim], while logis are of the dimensions [batch_size, sequence_lenth, vocab_size]
-    Therefore, hidden_states are the actual internal respresentations of the model (ie: what the model understands) while the logits are
-    the model's predictions of the next token based on its understanding (ie: hidden states).
-
-   
-    Emebdding layer = hidden_state[0] ([1, 78, 4096])
-    layer1 = hidden_state[1] ([1, 78, 4096])
-    ...
-    layer32 = hidden_state[32] ([1, 78, 4096])
-
-    Therefore, if a model has 32 transformer layers then it has length = 33 (0-32).
-    """
     hidden_states = outputs.hidden_states
 
-    # finding the index of the last token, since it is zero indexed we subtract 1
-    final_token_idx = int(attention_mask[0].sum().item()) - 1 # .item() converts a single-value pytorch tensor to normal python number
+    final_token_idx = int(attention_mask[0].sum().item()) - 1
 
     layer_vectors = []
     for layer_hidden in hidden_states:
-        vec = layer_hidden[0, final_token_idx, :].detach().cpu() # take the first batch item, for the last token index, take all the hidden dimensions
+        vec = layer_hidden[0, final_token_idx, :].detach().cpu()
         layer_vectors.append(vec)
-
-        """
-        Example: 
-        prompt_length = 12 tokens (seq length)
-        hidden_dim = 4096
-        num_transformer_layers = 28
-
-        therefore:
-        # of hdden states = 29 (including the embedding layer)
-        dimension of each hidden state = [1, 12, 4096]
-        final_token_idx = 11
-        """
-
     activations = torch.stack(layer_vectors, dim=0) # turns into a list of vectors into a tensor
 
     return activations
@@ -112,7 +55,7 @@ def generate_model_response(model, tokenizer, input_ids, attention_mask, max_new
         input_ids = input_ids,
         attention_mask = attention_mask, 
         max_new_tokens = max_new_tokens,
-        do_sample = False, # means greedy decoding is used - chooses the highest probability amongst the list of possible next tokens 
+        do_sample = False,
         pad_token_id = tokenizer.eos_token_id,
     )
 
@@ -218,11 +161,10 @@ def main():
     # id header
     dataset = args.dataset
 
-
     print("="*80)
-    print(f"Extracting Activations during Inference")
+    print("Extracting Activations during Inference")
     print("-"*80)
-    print(f"INFO: Loading Dataset...")
+    print("INFO: Loading Dataset...")
     print(f"INFO: Input CSV: {input_csv_path}")
     df = pd.read_csv(input_csv_path)
 
@@ -234,7 +176,7 @@ def main():
         print(f"INFO: Using the first {len(df)} examples for debug run.")
 
     if "id" not in df.columns:
-        print(f"WARNING: No 'id' column found. Creating one now. ")
+        print("WARNING: No 'id' column found. Creating one now. ")
         df.insert(0, "id", [f"{dataset}_{i:05d}" for i in range(len(df))])
         
     if args.prompt_col not in df.columns:
@@ -244,7 +186,7 @@ def main():
         )
     print("="*80)
 
-    print(f"INFO: Loading tokenizer and model")
+    print("INFO: Loading tokenizer and model")
     print(f"INFO: Model path: {model_path}")
 
     torch_dtype = get_torch_dtype(args.dtype)
@@ -257,12 +199,11 @@ def main():
         trust_remote_code=True,
     )
 
-    print(f"INFO: Successfully Loaded Tokenizer!")
+    print("INFO: Successfully Loaded Tokenizer!")
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # loading the model
     model = AutoModelForCausalLM.from_pretrained(
         str(model_path),
         local_files_only=True,
@@ -271,9 +212,9 @@ def main():
         trust_remote_code="True"
     )
 
-    model.eval() # cuz we are not training the model
+    model.eval()
 
-    print(f"INFO: Successfully Loaded the Model!")
+    print("INFO: Successfully Loaded the Model!")
     print(f"INFO: dtype: {args.dtype}")
     print(f"INFO: Output dir: {output_dir}")
 

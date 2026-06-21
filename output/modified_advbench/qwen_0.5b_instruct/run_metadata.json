@@ -1,0 +1,13 @@
+{
+  "model_path": "models/Qwen2.5-0.5B-Instruct",
+  "model_tag": "qwen_0.5b_instruct",
+  "input_csv_path": "datasets/modified_advbench.csv",
+  "num_examples": 400,
+  "prompt_col": "prompt",
+  "label_col": "label",
+  "category_col": null,
+  "max_new_tokens": 256,
+  "max_prompt_tokens": 2048,
+  "dtype": "bfloat16",
+  "activation_type": "final_prompt_token_all_layers"
+}
