@@ -1,7 +1,7 @@
 # generated outputs
 activations/
 checkpoints/
-results/
+#results/
 runs/
 wandb/
 models/
