@@ -102,4 +102,4 @@ The results suggest that jailbreak susceptibility is not explained by model size
 
 Linear probes show decodability, not causality. The response labelling also uses a rule-based refusal detector, which may misclassify ambiguous responses. Future work should test more models and datasets, use human or model-assisted response annotation, and apply causal interventions such as activation patching or steering.
 
-###### Project Done By: Sankeerthana, Baisayan, Harshprabha, Devansh
+###### Project Done By: Sankeerthana, Baisayan, Harshprabha, Devansh for the Global South AI Safety Hackathon, June 2026.
